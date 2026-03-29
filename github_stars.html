@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>GitHub 仓库实时 Stars 查看器 - 防缓存版</title>
+    <title>GitHub 仓库实时 Stars 查看</title>
     <style>
         * {
             margin: 0;
@@ -489,7 +489,7 @@
         </div>
     </div>
     <div class="footer-note">
-        ⭐ 数据来自 GitHub API (实时获取，强制禁用缓存) | 支持深色/浅色主题
+        ⭐ 数据来自 GitHub API
     </div>
 </div>
 
@@ -586,12 +586,12 @@
             starsSpan.innerText = formattedStars;
             currentStars = starsCount;
         } else if (starsCount === null) {
-            starsSpan.innerText = '⚠️';
+            starsSpan.innerText = '?';
         }
         updateTimeSpan.innerText = formatDate(updateDate);
     }
     
-    // 核心请求：彻底禁用缓存 + 随机时间戳
+    // ========== 核心请求：避免任何预检，只用随机参数强制刷新 ==========
     async function fetchStars(showLoadingEffect = true) {
         if (isFetching) return;
         
@@ -603,24 +603,22 @@
             manualBtn._originalText = originalText;
         }
         
-        updateStatusMessage('正在请求 GitHub API (无缓存)...', 'info');
+        updateStatusMessage('正在请求 GitHub API (实时数据)...', 'info');
         
-        // 添加随机参数彻底绕过所有缓存（浏览器、CDN、代理）
-        const timestamp = Date.now();
-        const uniqueUrl = `${BASE_API_URL}?_t=${timestamp}`;
+        // 关键：添加随机时间戳参数，彻底绕过浏览器/代理/CDN缓存
+        const uniqueUrl = `${BASE_API_URL}?_t=${Date.now()}`;
         
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 12000);
             
+            // 只保留简单请求头，避免 CORS 预检 (OPTIONS) 失败
             const response = await fetch(uniqueUrl, {
                 method: 'GET',
-                cache: 'no-store',           // 禁止浏览器缓存
+                cache: 'no-store',   // 告诉浏览器不要使用缓存，不添加额外头部
                 headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+                    'Accept': 'application/vnd.github.v3+json'
+                    // 不再添加 Cache-Control / Pragma / Expires，避免触发预检
                 },
                 signal: controller.signal
             });
@@ -631,7 +629,7 @@
                 if (response.status === 403) {
                     errorDetail = `API 限制 (403) — 可能达到速率上限，请稍后重试`;
                 } else if (response.status === 404) {
-                    errorDetail = `仓库不存在或网络错误`;
+                    errorDetail = `仓库不存在或地址错误`;
                 } else if (response.status === 410) {
                     errorDetail = `仓库已被删除`;
                 }
@@ -655,11 +653,10 @@
             let errorMsg = err.message;
             if (err.name === 'AbortError') {
                 errorMsg = '请求超时，请检查网络后重试';
-            } else if (err.message.includes('fetch') || err.message.includes('network')) {
-                errorMsg = '网络错误，无法连接 GitHub API (请检查网络)';
+            } else if (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Failed to fetch')) {
+                errorMsg = '网络错误：无法连接 GitHub API (请检查代理或网络设置)';
             }
             updateStatusMessage(`获取失败: ${errorMsg}`, 'error');
-            // 更新时间戳显示失败，但保留原有星星数值
             updateTimeSpan.innerText = `${formatDate(new Date())} (请求失败)`;
             if (currentStars === null) {
                 starsSpan.innerText = '?';
@@ -721,7 +718,7 @@
                 if (!isFetching) {
                     fetchStars(false).catch(()=>{});
                 }
-                updateStatusMessage('自动刷新已开启 (间隔30秒，无缓存)', 'success');
+                updateStatusMessage('自动刷新已开启 (间隔30秒，实时获取)', 'success');
             } else {
                 stopAutoRefresh();
                 updateStatusMessage('自动刷新已关闭', 'info');
@@ -735,6 +732,7 @@
                 updateStatusMessage('已有请求进行中，请稍后', 'info');
                 return;
             }
+            // 手动刷新强制获取最新（无缓存）
             await fetchStars(true);
         });
     }
@@ -768,7 +766,7 @@
         if (autoCheckbox.checked) {
             startAutoRefresh();
         }
-        // 首次加载立即获取真实数据（无缓存）
+        // 首次加载立即获取真实数据
         await fetchStars(true);
         if (autoCheckbox.checked && !autoRefreshTimer) {
             startAutoRefresh();
