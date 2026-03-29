@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GitHub 仓库实时 Stars 查看器 - 防缓存版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ========== 深色/浅色主题变量 ========== */
+        :root {
+            --bg-gradient-start: #0a0c10;
+            --bg-gradient-end: #0f1117;
+            --card-bg: rgba(22, 27, 34, 0.85);
+            --card-border: rgba(48, 54, 61, 0.5);
+            --header-bg: #161b22;
+            --header-border: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --accent-green-active: #1b6e2e;
+            --badge-bg: #6e7681;
+            --badge-text: #ffffffcc;
+            --stars-gradient-start: #FFD966;
+            --stars-gradient-end: #FFB347;
+            --label-bg: #21262d80;
+            --action-bg: #0d1117;
+            --action-border: #21262d;
+            --refresh-control-bg: #161b22;
+            --toggle-bg: #6e7681;
+            --toggle-checked: #238636;
+            --status-info-bg: #21262d;
+            --status-error-bg: #3b2b2b;
+            --status-error-text: #f85149;
+            --status-success-bg: #1f3b2a;
+            --status-success-text: #7ee787;
+            --footer-bg: #0a0c10;
+            --footer-border: #1f242c;
+            --footer-text: #5a6270;
+            --shadow-color: rgba(0,0,0,0.6);
+            --link-color: #2f81f7;
+            --spinner-light: rgba(255,255,255,0.3);
+            --spinner-top: white;
+        }
+
+        body.light-theme {
+            --bg-gradient-start: #f6f8fa;
+            --bg-gradient-end: #e9ecef;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(208, 215, 222, 0.8);
+            --header-bg: #ffffff;
+            --header-border: #d0d7de;
+            --text-primary: #1f2328;
+            --text-secondary: #57606a;
+            --text-muted: #6e7781;
+            --accent-green: #2c974b;
+            --accent-green-hover: #3fb362;
+            --accent-green-active: #1a7f37;
+            --badge-bg: #eaeef2;
+            --badge-text: #1f2328cc;
+            --stars-gradient-start: #e6a700;
+            --stars-gradient-end: #c77d00;
+            --label-bg: #eef2f5cc;
+            --action-bg: #ffffff;
+            --action-border: #d0d7de;
+            --refresh-control-bg: #f6f8fa;
+            --toggle-bg: #8c959f;
+            --toggle-checked: #2c974b;
+            --status-info-bg: #eef2f5;
+            --status-error-bg: #ffebe9;
+            --status-error-text: #cf222e;
+            --status-success-bg: #dafbe1;
+            --status-success-text: #1a7f37;
+            --footer-bg: #f6f8fa;
+            --footer-border: #d0d7de;
+            --footer-text: #57606a;
+            --shadow-color: rgba(0,0,0,0.1);
+            --link-color: #0969da;
+            --spinner-light: rgba(0,0,0,0.1);
+            --spinner-top: #2c974b;
+        }
+
+        body {
+            background: linear-gradient(145deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1.5rem;
+            transition: background 0.25s ease, color 0.2s ease;
+        }
+
+        .stars-card {
+            max-width: 750px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-radius: 2.5rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 25px 45px -12px var(--shadow-color), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s;
+        }
+
+        .stars-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 32px 55px -16px var(--shadow-color);
+        }
+
+        .repo-header {
+            background: var(--header-bg);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .repo-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .repo-icon {
+            background: var(--accent-green);
+            border-radius: 40%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            box-shadow: 0 2px 8px rgba(35, 134, 54, 0.3);
+            transition: background 0.2s;
+        }
+
+        .repo-title {
+            font-weight: 600;
+            font-size: 1.4rem;
+            letter-spacing: -0.3px;
+        }
+
+        .repo-title a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .repo-title a:hover {
+            color: var(--link-color);
+            text-decoration: underline;
+        }
+
+        .badge-private {
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .stars-main {
+            padding: 2.5rem 2rem 2rem 2rem;
+            text-align: center;
+            background: radial-gradient(circle at 30% 10%, rgba(56, 139, 253, 0.08), transparent 70%);
+            transition: background 0.2s;
+        }
+
+        .stars-count-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .star-icon-big {
+            font-size: 3.8rem;
+            filter: drop-shadow(0 6px 12px rgba(255, 215, 0, 0.25));
+            animation: subtle-float 3s infinite ease-in-out;
+        }
+
+        @keyframes subtle-float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .stars-number {
+            font-size: 5.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--stars-gradient-start), var(--stars-gradient-end));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .stars-label {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: var(--label-bg);
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .last-updated {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .update-time {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--header-bg);
+            padding: 0.2rem 0.7rem;
+            border-radius: 24px;
+            font-size: 0.75rem;
+            transition: background 0.2s;
+        }
+
+        .action-bar {
+            background: var(--action-bg);
+            padding: 1rem 2rem 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-top: 1px solid var(--action-border);
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .refresh-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--refresh-control-bg);
+            padding: 0.4rem 1rem 0.4rem 1.2rem;
+            border-radius: 60px;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn {
+            background: var(--accent-green);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.15s linear;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent-green-hover);
+            transform: scale(1.02);
+        }
+
+        .refresh-btn:active {
+            background: var(--accent-green-active);
+            transform: scale(0.98);
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--action-border);
+            padding: 0.2rem 1rem;
+            border-radius: 60px;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--toggle-bg);
+            transition: 0.2s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--toggle-checked);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .auto-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .status-msg {
+            font-size: 0.75rem;
+            background: var(--status-info-bg);
+            padding: 0.3rem 0.9rem;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .status-msg.error {
+            background: var(--status-error-bg);
+            color: var(--status-error-text);
+        }
+
+        .status-msg.success {
+            background: var(--status-success-bg);
+            color: var(--status-success-text);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            padding: 0.8rem 1rem;
+            background: var(--footer-bg);
+            border-top: 1px solid var(--footer-border);
+            color: var(--footer-text);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--spinner-light);
+            border-radius: 50%;
+            border-top-color: var(--spinner-top);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .theme-toggle-btn {
+            background: var(--refresh-control-bg);
+            border: 1px solid var(--action-border);
+            border-radius: 40px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--header-border);
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 550px) {
+            .stars-number { font-size: 3.8rem; }
+            .repo-title { font-size: 1.1rem; }
+            .action-bar { flex-direction: column; align-items: stretch; }
+            .refresh-control { justify-content: space-between; }
+            .theme-toggle-btn { align-self: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars-card">
+    <div class="repo-header">
+        <div class="repo-info">
+            <div class="repo-icon">📘</div>
+            <div class="repo-title">
+                <a href="https://github.com/wangwenhao20211/wwh-wiki" target="_blank" rel="noopener noreferrer">
+                    wangwenhao20211 / wwh-wiki
+                </a>
+            </div>
+            <div class="badge-private">公开仓库</div>
+        </div>
+        <div style="display: flex; gap: 0.7rem; align-items: center;">
+            <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="切换深色/浅色模式">
+                🌙 深色模式
+            </button>
+            <div class="status-msg" id="statusMsg">
+                <span>🟢</span> 就绪
+            </div>
+        </div>
+    </div>
+
+    <div class="stars-main">
+        <div class="stars-count-container">
+            <div class="star-icon-big">⭐</div>
+            <div class="stars-number" id="starsValue">—</div>
+            <div class="stars-label">Stars</div>
+        </div>
+        <div class="last-updated">
+            <span>📅 最后更新:</span>
+            <span class="update-time" id="updateTimestamp">从未获取</span>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <div class="refresh-control">
+            <button class="refresh-btn" id="manualRefreshBtn">
+                🔄 立即刷新
+            </button>
+            <div class="auto-refresh-toggle">
+                <span class="auto-label">⏱️ 自动刷新</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoRefreshCheckbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        <div id="nextRefreshHint" class="status-msg" style="background: var(--action-border);">
+            ⚡ 自动刷新已开启 (30s)
+        </div>
+    </div>
+    <div class="footer-note">
+        ⭐ 数据来自 GitHub API (实时获取，强制禁用缓存) | 支持深色/浅色主题
+    </div>
+</div>
+
+<script>
+    // ======================= 配置 =======================
+    const REPO_OWNER = "wangwenhao20211";
+    const REPO_NAME = "wwh-wiki";
+    const BASE_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
+    
+    // DOM 元素
+    const starsSpan = document.getElementById("starsValue");
+    const updateTimeSpan = document.getElementById("updateTimestamp");
+    const statusMsgDiv = document.getElementById("statusMsg");
+    const manualBtn = document.getElementById("manualRefreshBtn");
+    const autoCheckbox = document.getElementById("autoRefreshCheckbox");
+    const nextHintSpan = document.getElementById("nextRefreshHint");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    
+    const AUTO_INTERVAL_MS = 30000;
+    let autoRefreshTimer = null;
+    let isFetching = false;
+    let currentStars = null;
+    
+    // ========== 主题切换 ==========
+    function initTheme() {
+        const savedTheme = localStorage.getItem('githubStarsTheme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            updateThemeButtonText(true);
+        } else if (savedTheme === 'dark') {
+            document.body.classList.remove('light-theme');
+            updateThemeButtonText(false);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (!prefersDark) {
+                document.body.classList.add('light-theme');
+                updateThemeButtonText(true);
+            } else {
+                document.body.classList.remove('light-theme');
+                updateThemeButtonText(false);
+            }
+        }
+    }
+    
+    function updateThemeButtonText(isLight) {
+        if (isLight) {
+            themeToggleBtn.innerHTML = '☀️ 浅色模式';
+        } else {
+            themeToggleBtn.innerHTML = '🌙 深色模式';
+        }
+    }
+    
+    function toggleTheme() {
+        const isLight = document.body.classList.toggle('light-theme');
+        if (isLight) {
+            localStorage.setItem('githubStarsTheme', 'light');
+            updateThemeButtonText(true);
+        } else {
+            localStorage.setItem('githubStarsTheme', 'dark');
+            updateThemeButtonText(false);
+        }
+    }
+    
+    // ========== 辅助函数 ==========
+    function updateStatusMessage(message, type = 'info') {
+        statusMsgDiv.innerHTML = '';
+        statusMsgDiv.classList.remove('error', 'success');
+        let icon = '🟢';
+        if (type === 'error') {
+            icon = '❌';
+            statusMsgDiv.classList.add('error');
+        } else if (type === 'success') {
+            icon = '✅';
+            statusMsgDiv.classList.add('success');
+        } else {
+            icon = '🟢';
+        }
+        statusMsgDiv.innerHTML = `<span>${icon}</span> ${message}`;
+    }
+    
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    function updateUI(starsCount, updateDate = new Date()) {
+        if (starsCount !== undefined && starsCount !== null && !isNaN(starsCount)) {
+            const formattedStars = starsCount.toLocaleString();
+            starsSpan.innerText = formattedStars;
+            currentStars = starsCount;
+        } else if (starsCount === null) {
+            starsSpan.innerText = '⚠️';
+        }
+        updateTimeSpan.innerText = formatDate(updateDate);
+    }
+    
+    // 核心请求：彻底禁用缓存 + 随机时间戳
+    async function fetchStars(showLoadingEffect = true) {
+        if (isFetching) return;
+        
+        isFetching = true;
+        if (showLoadingEffect) {
+            manualBtn.disabled = true;
+            const originalText = manualBtn.innerHTML;
+            manualBtn.innerHTML = '<span class="loading-spinner"></span> 获取中...';
+            manualBtn._originalText = originalText;
+        }
+        
+        updateStatusMessage('正在请求 GitHub API (无缓存)...', 'info');
+        
+        // 添加随机参数彻底绕过所有缓存（浏览器、CDN、代理）
+        const timestamp = Date.now();
+        const uniqueUrl = `${BASE_API_URL}?_t=${timestamp}`;
+        
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+            
+            const response = await fetch(uniqueUrl, {
+                method: 'GET',
+                cache: 'no-store',           // 禁止浏览器缓存
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                let errorDetail = `HTTP ${response.status}`;
+                if (response.status === 403) {
+                    errorDetail = `API 限制 (403) — 可能达到速率上限，请稍后重试`;
+                } else if (response.status === 404) {
+                    errorDetail = `仓库不存在或网络错误`;
+                } else if (response.status === 410) {
+                    errorDetail = `仓库已被删除`;
+                }
+                throw new Error(`GitHub API 错误: ${errorDetail}`);
+            }
+            
+            const data = await response.json();
+            let starCount = data.stargazers_count;
+            if (starCount === undefined || starCount === null) {
+                throw new Error("API 返回数据缺少 stargazers_count 字段");
+            }
+            starCount = Number(starCount);
+            if (isNaN(starCount)) starCount = 0;
+            
+            const now = new Date();
+            updateUI(starCount, now);
+            updateStatusMessage(`同步成功！当前 ${starCount.toLocaleString()} 颗星 (实时)`, 'success');
+            return starCount;
+        } catch (err) {
+            console.error("获取stars失败:", err);
+            let errorMsg = err.message;
+            if (err.name === 'AbortError') {
+                errorMsg = '请求超时，请检查网络后重试';
+            } else if (err.message.includes('fetch') || err.message.includes('network')) {
+                errorMsg = '网络错误，无法连接 GitHub API (请检查网络)';
+            }
+            updateStatusMessage(`获取失败: ${errorMsg}`, 'error');
+            // 更新时间戳显示失败，但保留原有星星数值
+            updateTimeSpan.innerText = `${formatDate(new Date())} (请求失败)`;
+            if (currentStars === null) {
+                starsSpan.innerText = '?';
+            }
+            return null;
+        } finally {
+            isFetching = false;
+            if (showLoadingEffect && manualBtn) {
+                manualBtn.disabled = false;
+                if (manualBtn._originalText) {
+                    manualBtn.innerHTML = manualBtn._originalText;
+                } else {
+                    manualBtn.innerHTML = '🔄 立即刷新';
+                }
+            }
+            updateAutoRefreshHint();
+        }
+    }
+    
+    function updateAutoRefreshHint() {
+        if (autoCheckbox.checked && autoRefreshTimer) {
+            nextHintSpan.innerHTML = `⏳ 自动刷新已开启 (每30秒) | 下次刷新准备中...`;
+        } else if (!autoCheckbox.checked) {
+            nextHintSpan.innerHTML = `⏸️ 自动刷新已关闭 | 手动点击按钮更新`;
+        } else {
+            nextHintSpan.innerHTML = `⚡ 自动刷新已开启 (30s)`;
+        }
+    }
+    
+    function startAutoRefresh() {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+        }
+        if (autoCheckbox.checked) {
+            autoRefreshTimer = setInterval(() => {
+                if (!isFetching) {
+                    fetchStars(false).catch(e => console.warn("自动刷新出错", e));
+                }
+            }, AUTO_INTERVAL_MS);
+            updateAutoRefreshHint();
+        } else {
+            updateAutoRefreshHint();
+        }
+    }
+    
+    function stopAutoRefresh() {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+        }
+        updateAutoRefreshHint();
+    }
+    
+    function bindAutoToggle() {
+        autoCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                startAutoRefresh();
+                if (!isFetching) {
+                    fetchStars(false).catch(()=>{});
+                }
+                updateStatusMessage('自动刷新已开启 (间隔30秒，无缓存)', 'success');
+            } else {
+                stopAutoRefresh();
+                updateStatusMessage('自动刷新已关闭', 'info');
+            }
+        });
+    }
+    
+    function bindManualRefresh() {
+        manualBtn.addEventListener('click', async () => {
+            if (isFetching) {
+                updateStatusMessage('已有请求进行中，请稍后', 'info');
+                return;
+            }
+            await fetchStars(true);
+        });
+    }
+    
+    function handleVisibilityChange() {
+        if (document.hidden) {
+            if (autoCheckbox.checked && autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        } else {
+            if (autoCheckbox.checked && !autoRefreshTimer) {
+                startAutoRefresh();
+                if (!isFetching) {
+                    fetchStars(false).catch(()=>{});
+                }
+            } else if (!autoCheckbox.checked && autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        }
+    }
+    
+    async function init() {
+        initTheme();
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        bindManualRefresh();
+        bindAutoToggle();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        if (autoCheckbox.checked) {
+            startAutoRefresh();
+        }
+        // 首次加载立即获取真实数据（无缓存）
+        await fetchStars(true);
+        if (autoCheckbox.checked && !autoRefreshTimer) {
+            startAutoRefresh();
+        }
+    }
+    
+    window.addEventListener('beforeunload', () => {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+        }
+    });
+    
+    init();
+</script>
+</body>
+</html>
