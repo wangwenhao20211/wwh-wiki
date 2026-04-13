@@ -3,7 +3,7 @@ title: 我的 Wiki 首页
 ---
 
 <style>
-  /* 内联样式，只作用于本页 */
+  /* 全局样式 + 移动端适配 */
   .wiki-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -35,6 +35,7 @@ title: 我的 Wiki 首页
     color: #1a202c;
     text-decoration: none;
     display: block;
+    word-break: break-word;
   }
 
   .wiki-card a::before {
@@ -46,11 +47,31 @@ title: 我的 Wiki 首页
     color: #0366d6;
   }
 
-  /* 如果页面有描述字段，可以显示小字 */
   .wiki-card p {
     margin: 8px 0 0;
     font-size: 0.9rem;
     color: #57606a;
+  }
+
+  /* 手机端适配：屏幕宽度 ≤ 600px 时 */
+  @media (max-width: 600px) {
+    .wiki-grid {
+      grid-template-columns: 1fr;      /* 强制单列 */
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .wiki-card {
+      padding: 16px 14px;
+    }
+
+    .wiki-card a {
+      font-size: 1.05rem;
+    }
+
+    .wiki-card p {
+      font-size: 0.85rem;
+    }
   }
 </style>
 
