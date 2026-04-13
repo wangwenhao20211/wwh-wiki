@@ -1,0 +1,52 @@
+---
+---
+
+// 卡片网格容器
+.wiki-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+  padding: 0;
+  list-style: none;
+}
+
+// 单个卡片样式
+.wiki-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eaecef;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: #c0c4cc;
+  }
+
+  a {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+    display: block;
+
+    &::before {
+      content: "📄 ";
+      opacity: 0.7;
+    }
+
+    &:hover {
+      color: #0969da;
+    }
+  }
+}
+
+// 可选：添加页面描述
+.wiki-card p {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: #57606a;
+}
