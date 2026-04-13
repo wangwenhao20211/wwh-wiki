@@ -2,83 +2,81 @@
 title: 我的 Wiki 首页
 ---
 
+<!-- 强制手机视口适配 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+
 <style>
-  /* 全局样式 + 移动端适配 */
+  /* 彻底重置列表样式，并用 !important 确保优先级 */
   .wiki-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
-    margin: 25px 0;
-    padding: 0;
-    list-style: none;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+    gap: 16px !important;
+    margin: 20px 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
   }
 
   .wiki-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 18px 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    border: 1px solid #e1e4e8;
-    transition: all 0.2s ease;
-    list-style: none;
-  }
-
-  .wiki-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-    border-color: #b0b8c1;
+    background: #ffffff !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid #ddd !important;
+    list-style: none !important;
+    transition: none !important;  /* 手机端不要动画 */
   }
 
   .wiki-card a {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #1a202c;
-    text-decoration: none;
-    display: block;
-    word-break: break-word;
+    display: block !important;
+    padding: 18px 16px !important;
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+    color: #1a202c !important;
+    text-decoration: none !important;
+    word-break: break-word !important;
   }
 
   .wiki-card a::before {
-    content: "📄 ";
-    opacity: 0.8;
+    content: "📄 " !important;
+    opacity: 0.9 !important;
   }
 
-  .wiki-card a:hover {
-    color: #0366d6;
-  }
-
+  /* 描述文字（如果有） */
   .wiki-card p {
-    margin: 8px 0 0;
-    font-size: 0.9rem;
-    color: #57606a;
+    margin: 0 !important;
+    padding: 0 16px 18px 16px !important;
+    font-size: 0.95rem !important;
+    color: #555 !important;
   }
 
-  /* 手机端适配：屏幕宽度 ≤ 600px 时 */
-  @media (max-width: 600px) {
+  /* 手机端强制单列、间距加大 */
+  @media (max-width: 640px) {
     .wiki-grid {
-      grid-template-columns: 1fr;      /* 强制单列 */
-      gap: 12px;
-      margin: 20px 0;
-    }
-
-    .wiki-card {
-      padding: 16px 14px;
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+      margin: 16px 0 !important;
     }
 
     .wiki-card a {
-      font-size: 1.05rem;
+      padding: 22px 18px !important;   /* 手指点击区域更大 */
+      font-size: 1.3rem !important;
     }
 
     .wiki-card p {
-      font-size: 0.85rem;
+      padding: 0 18px 22px 18px !important;
+      font-size: 1rem !important;
+    }
+
+    /* 移动端去掉悬停效果 */
+    .wiki-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+      border-color: #ddd !important;
     }
   }
 </style>
 
 <h1>📚 知识库导航</h1>
-<p>这里列出了所有已创建的 Wiki 页面：</p>
+<p>以下所有页面均可点击进入：</p>
 
-<!-- 使用 Jekyll 的 Liquid 语法生成卡片列表 -->
 {% assign wiki_pages = site.pages | where_exp: "page", "page.title" | sort: "title" %}
 
 <ul class="wiki-grid">
@@ -92,7 +90,6 @@ title: 我的 Wiki 首页
   {% endfor %}
 </ul>
 
-<!-- 如果列表为空，提示用户 -->
 {% if wiki_pages.size == 0 %}
-  <p style="color: #999;">暂无页面，请先在其他 .md 文件中添加 `title` 字段。</p>
+  <p style="color: #999;">暂无页面，请在其他 .md 文件中添加 `title` 字段。</p>
 {% endif %}
