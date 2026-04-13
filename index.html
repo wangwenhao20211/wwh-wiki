@@ -2,15 +2,76 @@
 title: 我的 Wiki 首页
 ---
 
+<style>
+  /* 内联样式，只作用于本页 */
+  .wiki-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+    margin: 25px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .wiki-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e1e4e8;
+    transition: all 0.2s ease;
+    list-style: none;
+  }
+
+  .wiki-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border-color: #b0b8c1;
+  }
+
+  .wiki-card a {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a202c;
+    text-decoration: none;
+    display: block;
+  }
+
+  .wiki-card a::before {
+    content: "📄 ";
+    opacity: 0.8;
+  }
+
+  .wiki-card a:hover {
+    color: #0366d6;
+  }
+
+  /* 如果页面有描述字段，可以显示小字 */
+  .wiki-card p {
+    margin: 8px 0 0;
+    font-size: 0.9rem;
+    color: #57606a;
+  }
+</style>
+
+<h1>📚 知识库导航</h1>
+<p>这里列出了所有已创建的 Wiki 页面：</p>
+
+<!-- 使用 Jekyll 的 Liquid 语法生成卡片列表 -->
 {% assign wiki_pages = site.pages | where_exp: "page", "page.title" | sort: "title" %}
 
 <ul class="wiki-grid">
-{% for page in wiki_pages %}
-  <li class="wiki-card">
-    <a href="{{ page.url | relative_url }}">{{ page.title }}</a>
-    {% if page.description %}
-      <p>{{ page.description }}</p>
-    {% endif %}
-  </li>
-{% endfor %}
+  {% for page in wiki_pages %}
+    <li class="wiki-card">
+      <a href="{{ page.url | relative_url }}">{{ page.title }}</a>
+      {% if page.description %}
+        <p>{{ page.description }}</p>
+      {% endif %}
+    </li>
+  {% endfor %}
 </ul>
+
+<!-- 如果列表为空，提示用户 -->
+{% if wiki_pages.size == 0 %}
+  <p style="color: #999;">暂无页面，请先在其他 .md 文件中添加 `title` 字段。</p>
+{% endif %}
