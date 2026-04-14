@@ -7,7 +7,6 @@ title: wwh-wiki 首页
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  /* 基础重置 */
   * {
     box-sizing: border-box;
   }
@@ -49,16 +48,16 @@ title: wwh-wiki 首页
     box-shadow: 0 2px 8px rgba(37,99,235,0.1);
   }
 
-  /* 卡片网格 */
   .wiki-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 18px;
+    gap: 20px;
     margin: 20px 0;
     padding: 0;
     list-style: none;
   }
 
+  /* 卡片容器：启用 flex 列布局，保证统一高度感 */
   .wiki-card {
     background: white;
     border-radius: 16px;
@@ -66,6 +65,9 @@ title: wwh-wiki 首页
     border: 1px solid #eaeef2;
     transition: box-shadow 0.2s;
     list-style: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 140px; /* 保证卡片有基本高度，有描述时自然撑开 */
   }
 
   .wiki-card:hover {
@@ -73,9 +75,10 @@ title: wwh-wiki 首页
     border-color: #cdd9e6;
   }
 
+  /* 标题链接基础样式 */
   .wiki-card a {
     display: block;
-    padding: 24px 20px 8px 20px;   /* 上内边距加大，整体更宽松 */
+    padding: 20px 20px 12px 20px;  /* 上内边距增加，下内边距稍小 */
     font-size: 1.25rem;
     font-weight: 600;
     color: #1e293b;
@@ -90,15 +93,30 @@ title: wwh-wiki 首页
     margin-right: 4px;
   }
 
+  /* 描述段落 */
   .wiki-card p {
     margin: 0;
-    padding: 6px 20px 24px 20px;   /* 下内边距加大，底部留白更多 */
+    padding: 0 20px 20px 20px;  /* 底部内边距加大，更舒适 */
     font-size: 0.95rem;
     color: #4b5563;
     line-height: 1.5;
   }
 
-  /* 空状态 / 无结果 */
+  /* 当卡片只有标题（无描述）时，让标题垂直居中 */
+  .wiki-card > a:only-child {
+    flex: 1;                     /* 撑满剩余高度 */
+    display: flex;
+    align-items: center;         /* 垂直居中文字 */
+    padding: 20px;               /* 统一内边距，避免偏移 */
+  }
+
+  /* 保留图标与文字的基线对齐 */
+  .wiki-card > a:only-child::before {
+    align-self: center;
+    line-height: 1;
+  }
+
+  /* 空状态样式 */
   .no-results {
     text-align: center;
     padding: 40px 20px;
@@ -109,7 +127,7 @@ title: wwh-wiki 首页
     border: 1px dashed #cbd5e1;
   }
 
-  /* 移动端微调 */
+  /* 移动端适配 */
   @media (max-width: 640px) {
     body {
       padding: 16px 12px;
@@ -117,17 +135,25 @@ title: wwh-wiki 首页
 
     .wiki-grid {
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap: 16px;
+    }
+
+    .wiki-card {
+      min-height: 130px;
     }
 
     .wiki-card a {
-      padding: 24px 18px 8px 18px;   /* 移动端同样增加上下内边距 */
+      padding: 20px 18px 12px 18px;
       font-size: 1.35rem;
     }
 
     .wiki-card p {
-      padding: 6px 18px 24px 18px;   /* 移动端底部内边距加大 */
+      padding: 0 18px 20px 18px;
       font-size: 1rem;
+    }
+
+    .wiki-card > a:only-child {
+      padding: 20px 18px;
     }
 
     #searchInput {
@@ -136,7 +162,7 @@ title: wwh-wiki 首页
     }
   }
 
-  /* 页脚链接样式 */
+  /* GitHub 链接样式 */
   .github-link {
     display: inline-block;
     margin: 16px 0 8px;
