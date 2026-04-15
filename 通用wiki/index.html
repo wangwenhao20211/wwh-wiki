@@ -1,0 +1,285 @@
+---
+title: Common wiki(通用wiki)
+---
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    background: #f9fafb;
+  }
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .search-wrapper {
+    margin: 24px 0 20px;
+  }
+
+  #searchInput {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 1.1rem;
+    border: 1px solid #ddd;
+    border-radius: 40px;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    transition: border 0.15s;
+  }
+
+  #searchInput:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.1);
+  }
+
+  .wiki-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* 卡片容器：启用 flex 列布局，保证统一高度感 */
+  .wiki-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    border: 1px solid #eaeef2;
+    transition: box-shadow 0.2s;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 140px; /* 保证卡片有基本高度，有描述时自然撑开 */
+  }
+
+  .wiki-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    border-color: #cdd9e6;
+  }
+
+  /* 标题链接基础样式 */
+  .wiki-card a {
+    display: block;
+    padding: 20px 20px 12px 20px;  /* 上内边距增加，下内边距稍小 */
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    text-decoration: none;
+    word-break: break-word;
+  }
+
+  .wiki-card a::before {
+    content: "📄 ";
+    opacity: 0.85;
+    font-weight: normal;
+    margin-right: 4px;
+  }
+
+  /* 描述段落 */
+  .wiki-card p {
+    margin: 0;
+    padding: 0 20px 20px 20px;  /* 底部内边距加大，更舒适 */
+    font-size: 0.95rem;
+    color: #4b5563;
+    line-height: 1.5;
+  }
+
+  /* 当卡片只有标题（无描述）时，让标题垂直居中 */
+  .wiki-card > a:only-child {
+    flex: 1;                     /* 撑满剩余高度 */
+    display: flex;
+    align-items: center;         /* 垂直居中文字 */
+    padding: 20px;               /* 统一内边距，避免偏移 */
+  }
+
+  /* 保留图标与文字的基线对齐 */
+  .wiki-card > a:only-child::before {
+    align-self: center;
+    line-height: 1;
+  }
+
+  /* 空状态样式 */
+  .no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+    font-size: 1.1rem;
+    background: white;
+    border-radius: 20px;
+    border: 1px dashed #cbd5e1;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 640px) {
+    body {
+      padding: 16px 12px;
+    }
+
+    .wiki-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .wiki-card {
+      min-height: 130px;
+    }
+
+    .wiki-card a {
+      padding: 20px 18px 12px 18px;
+      font-size: 1.35rem;
+    }
+
+    .wiki-card p {
+      padding: 0 18px 20px 18px;
+      font-size: 1rem;
+    }
+
+    .wiki-card > a:only-child {
+      padding: 20px 18px;
+    }
+
+    #searchInput {
+      padding: 16px 18px;
+      font-size: 1rem;
+    }
+  }
+
+  /* GitHub 链接样式 */
+  .github-link {
+    display: inline-block;
+    margin: 16px 0 8px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    padding: 8px 18px;
+    border-radius: 30px;
+    transition: background 0.15s;
+  }
+
+  .github-link:hover {
+    background: #dbeafe;
+  }
+</style>
+
+<h1>📚 通用wiki</h1>
+<p>浏览所有 通用Wiki 下的页面，或使用下方搜索框快速定位。</p>
+<p>此分区为 通用wiki 分区，若有其他主题的页面请移步其他分区</p>
+<a class="github-link" href="https://github.com/wangwenhao20211/wwh-wiki" target="_blank" rel="noopener">
+  ⭐ GitHub 仓库
+</a>
+
+<!-- 搜索框 -->
+<div class="search-wrapper">
+  <input type="text" id="searchInput" placeholder="🔍 搜索页面标题或描述..." aria-label="搜索 Wiki 页面">
+</div>
+
+<!-- 从 Jekyll 收集所有有效页面 -->
+{% assign raw_pages = site.pages %}
+{% assign wiki_pages = "" | split: "" %}
+
+{% for p in raw_pages %}
+  {% if p.title and p.url and p.url != page.url %}
+    {% assign ext = p.name | split: "." | last %}
+    {% if ext == "md" or ext == "markdown" or ext == "html" %}
+      {% unless p.name contains "feed.xml" or p.name contains "sitemap" or p.name contains "404" %}
+        {% assign wiki_pages = wiki_pages | push: p %}
+      {% endunless %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% assign wiki_pages = wiki_pages | sort: "title" %}
+
+<!-- 卡片列表容器 -->
+<ul class="wiki-grid" id="wikiList">
+  {% for p in wiki_pages %}
+    <li class="wiki-card" data-title="{{ p.title | escape }}" data-description="{{ p.description | default: '' | escape }}">
+      <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
+      {% if p.description %}
+        <p>{{ p.description }}</p>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+<!-- 无搜索结果时显示的占位符 -->
+<div id="noResultsMessage" class="no-results" style="display: none;">
+  😕 没有匹配的页面，试试其他关键词吧。
+</div>
+
+<!-- 初次加载无任何页面的提示（仅当 wiki_pages 为空时显示） -->
+{% if wiki_pages.size == 0 %}
+<div class="no-results" style="display: block;">
+  📭 暂无 Wiki 页面。请在 Markdown 文件的 Front Matter 中添加 <code>title</code> 字段。
+</div>
+{% endif %}
+
+<script>
+  (function() {
+    const searchInput = document.getElementById('searchInput');
+    const wikiList = document.getElementById('wikiList');
+    const cards = Array.from(document.querySelectorAll('.wiki-card'));
+    const noResultsMsg = document.getElementById('noResultsMessage');
+
+    // 如果没有卡片，不执行搜索逻辑
+    if (!cards.length) return;
+
+    function filterPages() {
+      const query = searchInput.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const title = (card.dataset.title || '').toLowerCase();
+        const description = (card.dataset.description || '').toLowerCase();
+        const matches = title.includes(query) || description.includes(query);
+
+        if (matches) {
+          card.style.display = '';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // 控制无结果提示
+      if (visibleCount === 0) {
+        wikiList.style.display = 'none';
+        noResultsMsg.style.display = 'block';
+      } else {
+        wikiList.style.display = '';
+        noResultsMsg.style.display = 'none';
+      }
+    }
+
+    searchInput.addEventListener('input', filterPages);
+
+    // 可选：处理通过链接直接定位到搜索框时的初始状态（无操作）
+    // 保证初始显示所有卡片
+    filterPages();
+  })();
+</script>
+
+<!-- 修复 Safari 下可能的 grid 显示问题 -->
+<noscript>
+  <style>.wiki-card { display: block; }</style>
+</noscript>
