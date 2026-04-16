@@ -3,7 +3,6 @@ title: wwh-wiki 首页
 ---
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -28,7 +27,7 @@ title: wwh-wiki 首页
   }
 
   .search-wrapper {
-    margin: 24px 0 20px;
+    margin: 24px 0 16px;
   }
 
   #searchInput {
@@ -48,6 +47,53 @@ title: wwh-wiki 首页
     box-shadow: 0 2px 8px rgba(37,99,235,0.1);
   }
 
+  /* 标签筛选区域 */
+  .tag-filter-section {
+    margin: 12px 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+  }
+
+  .tag-filter-label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  .tag-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag-btn {
+    background: white;
+    border: 1px solid #d1d5db;
+    color: #1f2937;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .tag-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  .tag-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.2);
+  }
+
   .wiki-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -57,7 +103,6 @@ title: wwh-wiki 首页
     list-style: none;
   }
 
-  /* 卡片容器：启用 flex 列布局，保证统一高度感 */
   .wiki-card {
     background: white;
     border-radius: 16px;
@@ -67,7 +112,7 @@ title: wwh-wiki 首页
     list-style: none;
     display: flex;
     flex-direction: column;
-    min-height: 140px; /* 保证卡片有基本高度，有描述时自然撑开 */
+    min-height: 140px;
   }
 
   .wiki-card:hover {
@@ -75,10 +120,9 @@ title: wwh-wiki 首页
     border-color: #cdd9e6;
   }
 
-  /* 标题链接基础样式 */
   .wiki-card a {
     display: block;
-    padding: 20px 20px 12px 20px;  /* 上内边距增加，下内边距稍小 */
+    padding: 20px 20px 12px 20px;
     font-size: 1.25rem;
     font-weight: 600;
     color: #1e293b;
@@ -93,30 +137,26 @@ title: wwh-wiki 首页
     margin-right: 4px;
   }
 
-  /* 描述段落 */
   .wiki-card p {
     margin: 0;
-    padding: 0 20px 20px 20px;  /* 底部内边距加大，更舒适 */
+    padding: 0 20px 20px 20px;
     font-size: 0.95rem;
     color: #4b5563;
     line-height: 1.5;
   }
 
-  /* 当卡片只有标题（无描述）时，让标题垂直居中 */
   .wiki-card > a:only-child {
-    flex: 1;                     /* 撑满剩余高度 */
+    flex: 1;
     display: flex;
-    align-items: center;         /* 垂直居中文字 */
-    padding: 20px;               /* 统一内边距，避免偏移 */
+    align-items: center;
+    padding: 20px;
   }
 
-  /* 保留图标与文字的基线对齐 */
   .wiki-card > a:only-child::before {
     align-self: center;
     line-height: 1;
   }
 
-  /* 空状态样式 */
   .no-results {
     text-align: center;
     padding: 40px 20px;
@@ -127,7 +167,6 @@ title: wwh-wiki 首页
     border: 1px dashed #cbd5e1;
   }
 
-  /* 移动端适配 */
   @media (max-width: 640px) {
     body {
       padding: 16px 12px;
@@ -160,9 +199,14 @@ title: wwh-wiki 首页
       padding: 16px 18px;
       font-size: 1rem;
     }
+
+    .tag-filter-section {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
   }
 
-  /* GitHub 链接样式 */
   .github-link {
     display: inline-block;
     margin: 16px 0 8px;
@@ -182,7 +226,7 @@ title: wwh-wiki 首页
 </style>
 
 <h1>📚 wwh-wiki</h1>
-<p>浏览所有 Wiki 页面，或使用下方搜索框快速定位。</p>
+<p>浏览所有 Wiki 页面，或使用下方搜索框及标签快速定位。</p>
 <a class="github-link" href="https://github.com/wangwenhao20211/wwh-wiki" target="_blank" rel="noopener">
   ⭐ GitHub 仓库
 </a>
@@ -192,9 +236,10 @@ title: wwh-wiki 首页
   <input type="text" id="searchInput" placeholder="🔍 搜索页面标题或描述..." aria-label="搜索 Wiki 页面">
 </div>
 
-<!-- 从 Jekyll 收集所有有效页面 -->
+<!-- 从 Jekyll 收集所有有效页面，并提取 tags -->
 {% assign raw_pages = site.pages %}
 {% assign wiki_pages = "" | split: "" %}
+{% assign all_tags = "" | split: "" %}
 
 {% for p in raw_pages %}
   {% if p.title and p.url and p.url != page.url %}
@@ -202,17 +247,61 @@ title: wwh-wiki 首页
     {% if ext == "md" or ext == "markdown" or ext == "html" %}
       {% unless p.name contains "feed.xml" or p.name contains "sitemap" or p.name contains "404" %}
         {% assign wiki_pages = wiki_pages | push: p %}
+        {% if p.tags %}
+          {% comment %} 处理 tags：支持数组或逗号分隔字符串 {% endcomment %}
+          {% assign tag_array = p.tags %}
+          {% if tag_array.first %}
+            {% for tag in tag_array %}
+              {% assign all_tags = all_tags | push: tag %}
+            {% endfor %}
+          {% else %}
+            {% assign split_tags = p.tags | split: ',' %}
+            {% for tag in split_tags %}
+              {% assign trimmed = tag | strip %}
+              {% if trimmed != "" %}
+                {% assign all_tags = all_tags | push: trimmed %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endif %}
       {% endunless %}
     {% endif %}
   {% endif %}
 {% endfor %}
 
 {% assign wiki_pages = wiki_pages | sort: "title" %}
+{% assign unique_tags = all_tags | uniq | sort %}
+
+<!-- 标签筛选栏（仅当存在标签时显示） -->
+{% if unique_tags.size > 0 %}
+<div class="tag-filter-section" id="tagFilterSection">
+  <span class="tag-filter-label">🏷️ 按标签筛选：</span>
+  <div class="tag-buttons" id="tagButtons">
+    <button class="tag-btn active" data-tag="">全部</button>
+    {% for tag in unique_tags %}
+      <button class="tag-btn" data-tag="{{ tag | escape }}">{{ tag }}</button>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 <!-- 卡片列表容器 -->
 <ul class="wiki-grid" id="wikiList">
   {% for p in wiki_pages %}
-    <li class="wiki-card" data-title="{{ p.title | escape }}" data-description="{{ p.description | default: '' | escape }}">
+    {% comment %} 构建 tags 字符串，用于 data 属性 {% endcomment %}
+    {% if p.tags %}
+      {% if p.tags.first %}
+        {% assign tag_string = p.tags | join: ',' %}
+      {% else %}
+        {% assign tag_string = p.tags %}
+      {% endif %}
+    {% else %}
+      {% assign tag_string = "" %}
+    {% endif %}
+    <li class="wiki-card"
+        data-title="{{ p.title | escape }}"
+        data-description="{{ p.description | default: '' | escape }}"
+        data-tags="{{ tag_string | escape }}">
       <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
       {% if p.description %}
         <p>{{ p.description }}</p>
@@ -223,7 +312,7 @@ title: wwh-wiki 首页
 
 <!-- 无搜索结果时显示的占位符 -->
 <div id="noResultsMessage" class="no-results" style="display: none;">
-  😕 没有匹配的页面，试试其他关键词吧。
+  😕 没有匹配的页面，试试其他关键词或标签吧。
 </div>
 
 <!-- 初次加载无任何页面的提示（仅当 wiki_pages 为空时显示） -->
@@ -239,10 +328,24 @@ title: wwh-wiki 首页
     const wikiList = document.getElementById('wikiList');
     const cards = Array.from(document.querySelectorAll('.wiki-card'));
     const noResultsMsg = document.getElementById('noResultsMessage');
+    const tagButtons = document.querySelectorAll('.tag-btn');
 
-    // 如果没有卡片，不执行搜索逻辑
     if (!cards.length) return;
 
+    let selectedTag = '';   // 空字符串表示“全部”
+
+    // 更新标签按钮激活状态
+    function updateActiveTagButton(tag) {
+      tagButtons.forEach(btn => {
+        if (btn.dataset.tag === tag) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // 核心过滤逻辑：同时匹配搜索词和选中标签
     function filterPages() {
       const query = searchInput.value.trim().toLowerCase();
       let visibleCount = 0;
@@ -250,8 +353,18 @@ title: wwh-wiki 首页
       cards.forEach(card => {
         const title = (card.dataset.title || '').toLowerCase();
         const description = (card.dataset.description || '').toLowerCase();
-        const matches = title.includes(query) || description.includes(query);
+        const matchesQuery = title.includes(query) || description.includes(query);
 
+        // 标签过滤
+        let matchesTag = true;
+        if (selectedTag !== '') {
+          const tagString = card.dataset.tags || '';
+          // 将标签字符串转为小写数组，去除空项
+          const tags = tagString.toLowerCase().split(',').map(t => t.trim()).filter(t => t !== '');
+          matchesTag = tags.includes(selectedTag.toLowerCase());
+        }
+
+        const matches = matchesQuery && matchesTag;
         if (matches) {
           card.style.display = '';
           visibleCount++;
@@ -270,10 +383,20 @@ title: wwh-wiki 首页
       }
     }
 
+    // 监听搜索输入
     searchInput.addEventListener('input', filterPages);
 
-    // 可选：处理通过链接直接定位到搜索框时的初始状态（无操作）
-    // 保证初始显示所有卡片
+    // 监听标签按钮点击
+    tagButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const tag = this.dataset.tag;
+        selectedTag = tag;
+        updateActiveTagButton(tag);
+        filterPages();
+      });
+    });
+
+    // 初始化：确保所有卡片可见（与“全部”状态一致）
     filterPages();
   })();
 </script>
