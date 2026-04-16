@@ -10,7 +10,7 @@ description: 这是一小段关于此wiki的说明。
 
 ## 如何在该wiki创建/编辑页面?
 
-你在这个wiki主页点那个github仓库按钮，在根目录创建一个markdown文件，在md文件的最上端加上这个:
+你在这个wiki主页点那个github仓库按钮，在根目录创建一个markdown文件(如 苹果.md 注意不要和其他文件重名)，在md文件的最上端加上这个:
 ```
 ---
 title: 你的页面标题
