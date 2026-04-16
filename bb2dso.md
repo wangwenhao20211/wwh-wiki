@@ -1,7 +1,7 @@
 ---
 title: BB2DSO
 description: BB2DSO的简短介绍。
-tags:游戏,BB2DSO
+tags: 游戏,BB2DSO
 ---
 
 # BB2DSO
