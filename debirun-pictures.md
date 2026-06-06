@@ -1,7 +1,7 @@
 ---
 title: Debirun 图片集
-description: 
-tag: 恶魔连结
+description: 恶魔连结中Debirun的图片集。
+tags: 恶魔连结
 ---
 
 # Pictures
