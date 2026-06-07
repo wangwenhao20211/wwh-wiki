@@ -1,0 +1,32 @@
+name: Block Changes to Protected Paths
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-forbidden-paths:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for changes in forbidden paths
+        id: check_changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            forbidden:
+              - '/index.html'
+
+      - name: Block PR if forbidden paths changed
+        if: steps.filter.outputs.forbidden == 'true'
+        run: |
+          echo "❌ 错误：你的 Pull Request 修改了受保护的路径，本次检查未通过。"
+          echo "📁 被修改的受保护路径如下："
+          echo "${{ steps.filter.outputs.forbidden_files }}"
+          exit 1
